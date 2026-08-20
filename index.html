@@ -1,0 +1,2436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SQL Formatter gratuito e offline: formatar, validar e compactar SQL no navegador com editor Monaco (VS Code). Suporte a PostgreSQL, MySQL, SQL Server e mais dialetos. 100% local.">
+  <meta name="keywords" content="SQL formatter, formatar SQL, validar SQL, minificar SQL, SQL online, PostgreSQL, MySQL, Monaco Editor, SQL offline">
+  <meta name="author" content="Juliano Ballarini">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ballarini.com.br/juliano/sql-formatter/">
+  <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SQL Formatter — Validar e formatar SQL online">
+  <meta property="og:description" content="Ferramenta gratuita para validar, formatar e compactar SQL no navegador. Offline, local, com editor Monaco e múltiplos dialetos.">
+  <meta property="og:url" content="https://ballarini.com.br/juliano/sql-formatter/">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="Juliano Ballarini">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="SQL Formatter — Validar e formatar SQL online">
+  <meta name="twitter:description" content="Ferramenta gratuita para validar, formatar e compactar SQL no navegador. Offline e 100% local.">
+  <title>SQL Formatter — Validar e formatar SQL online</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230078d4' stroke-width='2'%3E%3Cellipse cx='12' cy='5' rx='9' ry='3'/%3E%3Cpath d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5'/%3E%3Cpath d='M3 12c0 1.66 4 3 9 3s9-1.34 9-3'/%3E%3C/svg%3E" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "SQL Formatter",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Web Browser",
+    "description": "Ferramenta gratuita, local e offline para colar, editar, validar, formatar e compactar SQL com editor Monaco e múltiplos dialetos.",
+    "url": "https://ballarini.com.br/juliano/sql-formatter/",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" },
+    "author": {
+      "@type": "Person",
+      "name": "Juliano Ballarini",
+      "url": "https://ballarini.com.br/juliano/"
+    },
+    "featureList": [
+      "Validação sintática de SQL com destaque de erro",
+      "Formatação e compactação com múltiplos dialetos",
+      "Processamento 100% no navegador",
+      "Funciona offline"
+    ]
+  }
+  </script>
+  <style>
+    :root, [data-theme="dark"] {
+      --bg: #1e1e1e;
+      --bg-secondary: #252526;
+      --bg-tertiary: #2d2d30;
+      --border: #3c3c3c;
+      --text: #cccccc;
+      --text-muted: #858585;
+      --accent: #007acc;
+      --accent-hover: #1a8ad4;
+      --success: #4ec9b0;
+      --error: #f48771;
+      --warning: #cca700;
+      --header-height: 48px;
+      --toolbar-height: 40px;
+      --status-height: 28px;
+      --focus-ring: #007fd4;
+      --shadow: rgba(0, 0, 0, 0.4);
+      --overlay: rgba(0, 0, 0, 0.6);
+      --toast-bg: #333333;
+    }
+
+    [data-theme="light"] {
+      --bg: #f3f3f3;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #e8e8e8;
+      --border: #d4d4d4;
+      --text: #333333;
+      --text-muted: #6e6e6e;
+      --accent: #0078d4;
+      --accent-hover: #106ebe;
+      --success: #107c10;
+      --error: #d13438;
+      --warning: #8a6914;
+      --shadow: rgba(0, 0, 0, 0.15);
+      --overlay: rgba(0, 0, 0, 0.4);
+      --toast-bg: #ffffff;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    button, input, select {
+      font-family: inherit;
+      font-size: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text);
+      border-radius: 4px;
+      padding: 4px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--border);
+      border-color: var(--text-muted);
+    }
+
+    button:active:not(:disabled) { transform: scale(0.97); }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 1px;
+    }
+
+    .icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: var(--header-height);
+      padding: 0 12px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    h1.header-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .header-back {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      margin-right: 8px;
+      white-space: nowrap;
+    }
+
+    .header-back:hover {
+      color: var(--accent);
+    }
+
+    .header-title svg { color: var(--accent); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .lang-switcher {
+      display: inline-flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 4px;
+      margin-right: 4px;
+    }
+
+    .lang-switcher__link {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px;
+      border-radius: 4px;
+      text-decoration: none;
+      line-height: 0;
+      opacity: 0.75;
+      transition: opacity 0.15s ease;
+    }
+
+    .lang-switcher__flag {
+      display: block;
+      width: 24px;
+      height: 18px;
+      object-fit: cover;
+      border-radius: 2px;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+      flex-shrink: 0;
+    }
+
+    .lang-switcher__link:hover,
+    .lang-switcher__link.is-active {
+      opacity: 1;
+    }
+
+    .lang-switcher__link.is-active .lang-switcher__flag {
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: var(--toolbar-height);
+      padding: 0 8px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      overflow-x: auto;
+    }
+
+    .toolbar-separator {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-dialect {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      margin-right: 4px;
+    }
+
+    .toolbar-dialect label {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      cursor: default;
+    }
+
+    .toolbar-dialect select {
+      height: 28px;
+      min-width: 140px;
+      max-width: 180px;
+      padding: 2px 8px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .toolbar-dialect.highlight select {
+      border-color: var(--warning);
+      box-shadow: 0 0 0 2px rgba(204, 167, 0, 0.35);
+    }
+
+    .toolbar-dialect.highlight {
+      animation: dialectPulse 0.6s ease 2;
+    }
+
+    @keyframes dialectPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.75; }
+    }
+
+    /* Main area */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 12px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      height: 28px;
+    }
+
+    .panel-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-header-actions label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      text-transform: none;
+      letter-spacing: 0;
+      cursor: pointer;
+    }
+
+    .editor-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .monaco-host {
+      position: absolute;
+      inset: 0;
+    }
+
+    .editor-container .monaco-editor { position: absolute !important; inset: 0; }
+
+    .monaco-editor .keyword-line-highlight {
+      background: rgba(0, 122, 204, 0.12);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    [data-theme="light"] .monaco-editor .keyword-line-highlight {
+      background: rgba(0, 120, 212, 0.1);
+    }
+
+    .resize-handle {
+      width: 5px;
+      cursor: col-resize;
+      background: var(--border);
+      flex-shrink: 0;
+      transition: background 0.15s;
+      z-index: 10;
+    }
+
+    .resize-handle:hover,
+    .resize-handle.active { background: var(--accent); }
+
+    .empty-state {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      pointer-events: none;
+      font-size: 14px;
+      z-index: 5;
+    }
+
+    .empty-state.hidden { display: none; }
+
+    .drop-overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--overlay);
+      border: 2px dashed var(--accent);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 16px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .drop-overlay.active { display: flex; }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: var(--status-height);
+      padding: 0 12px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      flex-shrink: 0;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .status-bar .status-item { display: flex; align-items: center; gap: 4px; }
+    .status-bar .status-author { margin-left: auto; opacity: 0.9; font-style: italic; }
+    .status-bar .status-author a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .status-bar .status-author a:hover {
+      text-decoration: underline;
+    }
+    .status-bar .status-valid { color: #b5f5d8; }
+    .status-bar .status-invalid { color: #ffb4a8; }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 100;
+    }
+
+    .loading-overlay.hidden { display: none; }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .processing-indicator {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      color: var(--warning);
+      font-size: 12px;
+      padding: 0 8px;
+    }
+
+    .processing-indicator.active { display: flex; }
+
+    .processing-indicator .mini-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--warning);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 40px;
+      right: 16px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 10px 16px;
+      border-radius: 4px;
+      background: var(--toast-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: 0 4px 12px var(--shadow);
+      pointer-events: auto;
+      animation: slideIn 0.25s ease;
+      max-width: 400px;
+      word-break: break-word;
+    }
+
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error { border-left: 4px solid var(--error); }
+    .toast.info { border-left: 4px solid var(--accent); }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: var(--overlay);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 900;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 8px 32px var(--shadow);
+      min-width: 320px;
+      max-width: 90vw;
+      max-height: 85vh;
+      overflow: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    .modal-body { padding: 16px; }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: var(--text-muted);
+      padding: 0 4px;
+      line-height: 1;
+    }
+
+    /* Settings panel */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -360px;
+      width: 340px;
+      height: 100%;
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border);
+      z-index: 800;
+      transition: right 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -4px 0 16px var(--shadow);
+    }
+
+    .settings-panel.open { right: 0; }
+
+    .settings-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .setting-group {
+      margin-bottom: 16px;
+    }
+
+    .setting-group label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .setting-group select,
+    .setting-group input[type="number"] {
+      width: 100%;
+      padding: 6px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 4px;
+    }
+
+    .setting-group .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .shortcuts-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .shortcuts-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .shortcuts-table td:last-child {
+      text-align: right;
+      font-family: monospace;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .monaco-error-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 32px;
+      text-align: center;
+      color: var(--error);
+    }
+
+    .monaco-error-screen.visible { display: flex; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main { flex-direction: column; }
+      .resize-handle { display: none; }
+      .panel { min-height: 200px; }
+      .toolbar button span.label { display: none; }
+      .header-actions button span.label { display: none; }
+      .toolbar-dialect label { display: none; }
+      .toolbar-dialect select { min-width: 110px; max-width: 130px; }
+    }
+
+    @media (max-width: 480px) {
+      .status-bar { gap: 8px; font-size: 11px; }
+    }
+
+    .tool-seo {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .tool-seo h2 {
+      color: var(--text);
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 1.75rem 0 0.75rem;
+    }
+
+    .tool-seo h2:first-child { margin-top: 0; }
+
+    .tool-seo p { margin: 0 0 1rem; }
+
+    .tool-seo ul {
+      margin: 0 0 1rem;
+      padding-left: 1.25rem;
+    }
+
+    .tool-seo li { margin-bottom: 0.35rem; }
+
+    .tool-seo a { color: var(--accent); }
+  </style>
+</head>
+<body data-theme="dark">
+  <div id="app">
+    <header class="header">
+      <h1 class="header-title">
+        <a href="../" class="header-back" data-i18n-back title="Voltar para Juliano Ballarini" data-i18n-title="back_title">&larr; <span data-i18n="back">Juliano Ballarini</span></a>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <span data-i18n="seo.h1">SQL Formatter</span>
+      </h1>
+      <div class="header-actions">
+        <button id="btn-settings" data-i18n-title="btn_settings" data-i18n-aria="btn_settings">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span class="label" data-i18n="btn_settings">Configurações</span>
+        </button>
+        <button id="btn-theme" data-i18n-title="btn_theme" data-i18n-aria="btn_theme">
+          <svg class="icon" id="icon-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <span class="label" data-i18n="btn_theme">Tema</span>
+        </button>
+        <button id="btn-upload-header" data-i18n-title="btn_open" data-i18n-aria="btn_open">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span class="label" data-i18n="btn_open">Abrir</span>
+        </button>
+        <button id="btn-download-header" data-i18n-title="btn_download" data-i18n-aria="btn_download">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span class="label" data-i18n="btn_download">Baixar</span>
+        </button>
+        <button id="btn-clear-header" data-i18n-title="btn_clear" data-i18n-aria="btn_clear">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          <span class="label" data-i18n="btn_clear">Limpar</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="toolbar" role="toolbar" data-i18n-aria="toolbar_aria" aria-label="Ferramentas SQL">
+      <div class="toolbar-dialect" id="toolbar-dialect-wrap">
+        <label for="toolbar-dialect" data-i18n="toolbar_dialect">Dialeto</label>
+        <select id="toolbar-dialect" aria-label="Dialeto SQL" data-i18n-aria="toolbar_dialect"></select>
+      </div>
+      <div class="toolbar-separator"></div>
+      <button id="btn-format" class="primary" data-i18n-title="btn_format">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span class="label" data-i18n="btn_format">Formatar</span>
+      </button>
+      <button id="btn-minify" data-i18n-title="btn_minify">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        <span class="label" data-i18n="btn_minify">Compactar</span>
+      </button>
+      <button id="btn-validate" data-i18n-title="btn_validate">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span class="label" data-i18n="btn_validate">Validar</span>
+      </button>
+      <button id="btn-copy" data-i18n-title="btn_copy">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span class="label" data-i18n="btn_copy">Copiar resultado</span>
+      </button>
+      <div class="toolbar-separator"></div>
+      <button id="btn-uppercase" data-i18n-title="btn_uppercase">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+        <span class="label" data-i18n="btn_uppercase">Keywords maiúsculas</span>
+      </button>
+      <button id="btn-strip-comments" data-i18n-title="btn_strip_comments">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="label" data-i18n="btn_strip_comments">Remover comentários</span>
+      </button>
+      <div class="toolbar-separator"></div>
+      <button id="btn-example" data-i18n-title="btn_example">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span class="label" data-i18n="btn_example">Exemplo</span>
+      </button>
+      <button id="btn-clear" data-i18n-title="btn_clear">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <span class="label" data-i18n="btn_clear">Limpar</span>
+      </button>
+      <div class="processing-indicator" id="processing-indicator" aria-live="polite">
+        <div class="mini-spinner"></div>
+        <span data-i18n="msg_processing">Processando...</span>
+      </div>
+    </div>
+
+    <main class="main" id="main-area">
+      <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <span data-i18n="msg_loading">Carregando Monaco Editor...</span>
+      </div>
+      <div class="monaco-error-screen" id="monaco-error">
+        <p data-i18n="msg_monaco_error">Falha ao carregar o Monaco Editor.</p>
+        <p data-i18n="msg_monaco_hint">Verifique se a pasta min/vs está ao lado do index.html e recarregue a página.</p>
+        <button onclick="location.reload()" data-i18n="btn_reload">Recarregar</button>
+      </div>
+
+      <section class="panel" id="panel-input">
+        <div class="panel-header">
+          <span data-i18n="panel_input">SQL de entrada</span>
+        </div>
+        <div class="editor-container" id="editor-input">
+          <div id="monaco-input" class="monaco-host"></div>
+          <div class="drop-overlay" id="drop-overlay" data-i18n="drag_overlay">Solte o arquivo .sql aqui</div>
+        </div>
+      </section>
+
+      <div class="resize-handle" id="resize-handle" role="separator" aria-orientation="vertical" data-i18n-aria="resize_aria" aria-label="Redimensionar painéis"></div>
+
+      <section class="panel" id="panel-output">
+        <div class="panel-header">
+          <span data-i18n="panel_output">Resultado</span>
+          <div class="panel-header-actions">
+            <label>
+              <input type="checkbox" id="chk-output-editable">
+              <span data-i18n="panel_allow_edit">Permitir edição</span>
+            </label>
+          </div>
+        </div>
+        <div class="editor-container" id="editor-output">
+          <div id="monaco-output" class="monaco-host"></div>
+          <div class="empty-state" id="empty-state" data-i18n="panel_empty">O resultado aparecerá aqui</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="status-bar" role="status" aria-live="polite" id="status-bar">
+      <span class="status-item" id="status-validity">—</span>
+      <span class="status-item" id="status-lines">Linhas: 0</span>
+      <span class="status-item" id="status-chars">Caracteres: 0</span>
+      <span class="status-item" id="status-size">Tamanho: 0 B</span>
+      <span class="status-item" id="status-time">Tempo: —</span>
+      <span class="status-item" id="status-error-pos"></span>
+      <span class="status-item" id="status-dialect"></span>
+      <span class="status-item" id="status-mode"></span>
+      <span class="status-item status-author" id="status-author">
+        Por <a href="https://github.com/jsballarini" target="_blank" rel="noopener noreferrer" aria-label="GitHub de Juliano Ballarini">Juliano Ballarini</a>
+      </span>
+    </footer>
+  </div>
+
+  <input type="file" id="file-input" accept=".sql,text/plain,application/sql" hidden>
+
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- Confirm modal -->
+  <div class="modal-backdrop" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal">
+      <div class="modal-header">
+        <span id="confirm-title" data-i18n="confirm_title">Confirmar limpeza</span>
+        <button class="modal-close" id="confirm-close" data-i18n-aria="close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p data-i18n="confirm_body">Deseja limpar o conteúdo dos editores? Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="confirm-cancel" data-i18n="confirm_cancel">Cancelar</button>
+        <button id="confirm-ok" class="primary" data-i18n="confirm_ok">Limpar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shortcuts modal -->
+  <div class="modal-backdrop" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
+    <div class="modal">
+      <div class="modal-header">
+        <span id="shortcuts-title" data-i18n="shortcuts_title">Atalhos de teclado</span>
+        <button class="modal-close" id="shortcuts-close" data-i18n-aria="close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <table class="shortcuts-table">
+          <tbody id="shortcuts-list"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings panel -->
+  <aside class="settings-panel" id="settings-panel" data-i18n-aria="settings_title" aria-label="Configurações">
+    <div class="modal-header">
+      <span data-i18n="settings_title">Configurações</span>
+      <button class="modal-close" id="settings-close" data-i18n-aria="close">&times;</button>
+    </div>
+    <div class="settings-body">
+      <div class="setting-group">
+        <label for="setting-theme" data-i18n="setting_theme">Tema</label>
+        <select id="setting-theme">
+          <option value="dark" data-i18n="theme_dark">Escuro</option>
+          <option value="light" data-i18n="theme_light">Claro</option>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label for="setting-indent" data-i18n="setting_indent">Indentação</label>
+        <select id="setting-indent">
+          <option value="2" data-i18n="indent_2">2 espaços</option>
+          <option value="4" data-i18n="indent_4">4 espaços</option>
+          <option value="tab" data-i18n="indent_tab">Tabulação</option>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label for="setting-font-size" data-i18n="setting_font_size">Tamanho da fonte</label>
+        <input type="number" id="setting-font-size" min="12" max="20" value="14">
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="setting-minimap"> <span data-i18n="setting_minimap">Exibir minimap</span>
+        </label>
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="setting-word-wrap"> <span data-i18n="setting_word_wrap">Quebra automática de linha</span>
+        </label>
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="setting-auto-format"> <span data-i18n="setting_auto_format">Formatar automaticamente</span>
+        </label>
+      </div>
+      <div class="setting-group">
+        <label for="setting-dialect" data-i18n="setting_dialect">Dialeto SQL</label>
+        <select id="setting-dialect"></select>
+      </div>
+      <div class="setting-group">
+        <label for="setting-keyword-case" data-i18n="setting_keyword_case">Estilo de keywords</label>
+        <select id="setting-keyword-case">
+          <option value="preserve" data-i18n="keyword_preserve">Preservar</option>
+          <option value="upper" data-i18n="keyword_upper">Maiúsculas</option>
+          <option value="lower" data-i18n="keyword_lower">Minúsculas</option>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label for="setting-auto-max" data-i18n="setting_auto_max">Tamanho máximo para formatação automática (KB)</label>
+        <input type="number" id="setting-auto-max" min="64" max="4096" value="512">
+      </div>
+    </div>
+  </aside>
+
+  <section class="tool-seo" id="sobre" aria-labelledby="seo-about-title">
+    <h2 id="seo-about-title" data-i18n="seo.about_title">O que é o SQL Formatter?</h2>
+    <div data-i18n-html="seo.about_html">
+      <p>O SQL Formatter é uma ferramenta web gratuita criada por Juliano Ballarini para validar, formatar e compactar consultas SQL diretamente no navegador. Desenvolvedores, DBAs e analistas de dados usam SQL todos os dias em relatórios, integrações, ETLs, dashboards e manutenção de bancos relacionais.</p>
+      <p>Um formatador confiável melhora a legibilidade de queries complexas, padroniza o estilo entre equipes e ajuda a identificar erros de sintaxe antes de executar scripts em produção. Esta ferramenta utiliza o editor Monaco — o mesmo motor do Visual Studio Code — e a biblioteca sql-formatter com suporte a PostgreSQL, MySQL, SQL Server, SQLite, Snowflake, BigQuery e outros dialetos.</p>
+    </div>
+    <h2 data-i18n="seo.features_title">Recursos principais</h2>
+    <div data-i18n-html="seo.features_html">
+      <ul>
+        <li>Validação sintática de SQL com destaque de erro por linha e coluna</li>
+        <li>Formatação (pretty-print) e compactação com um clique</li>
+        <li>Suporte a múltiplos dialetos SQL configuráveis</li>
+        <li>Keywords em maiúsculas ou minúsculas</li>
+        <li>Remoção de comentários SQL</li>
+        <li>Abrir, editar e baixar arquivos .sql localmente via drag and drop</li>
+        <li>Configurações de indentação, tema claro/escuro, minimap e quebra de linha</li>
+        <li>Atalhos de teclado para um fluxo de trabalho ágil no dia a dia</li>
+        <li>Funciona offline após a primeira carga da página</li>
+      </ul>
+    </div>
+    <h2 data-i18n="seo.privacy_title">Privacidade e processamento local</h2>
+    <div data-i18n-html="seo.privacy_html">
+      <p>Privacidade é prioridade: todo o processamento acontece 100% no seu navegador. Nenhuma consulta SQL é enviada a servidores externos, o que torna a ferramenta segura para scripts com dados sensíveis, credenciais de conexão ou lógica de negócio interna. Após a primeira visita, o SQL Formatter funciona offline porque o Monaco Editor e o formatador são servidos localmente.</p>
+    </div>
+    <h2 data-i18n="seo.use_cases_title">Para quem é esta ferramenta</h2>
+    <div data-i18n-html="seo.use_cases_html">
+      <p>Ideal para desenvolvedores full-stack, DBAs, engenheiros de dados e analistas que trabalham com PostgreSQL, SQL Server, MySQL, SQLite ou data warehouses. Use para padronizar queries antes de code review, depurar scripts copiados de logs ou ferramentas de BI, ou preparar exemplos para documentação técnica. Parte do ecossistema de ferramentas gratuitas de Juliano Ballarini, disponível em português, inglês e espanhol no hub oficial em ballarini.com.br/juliano.</p>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      function getMonacoRootUrl() {
+        // Monaco baseUrl must be the folder that *contains* `vs/` (not `vs/` itself).
+        return new URL('./min/', window.location.href).href;
+      }
+
+      window.MONACO_VS = './min/vs';
+      window.MonacoEnvironment = {
+        getWorkerUrl: function (_workerId, _label) {
+          // Same-origin: load workerMain directly so AMD resolves `vs/*` correctly.
+          return getMonacoRootUrl() + 'vs/base/worker/workerMain.js';
+        }
+      };
+    })();
+  </script>
+  <script src="./min/sql-formatter.min.js"></script>
+  <script src="./min/vs/loader.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const MONACO_VS = './min/vs';
+
+    // ─── Constants ───────────────────────────────────────────────
+    const CONSTANTS = {
+      DEBOUNCE_MS: 500,
+      AUTO_FORMAT_MAX_BYTES: 512 * 1024,
+      FILE_MAX_BYTES: 5 * 1024 * 1024,
+      WORKER_THRESHOLD_BYTES: 256 * 1024,
+      DEFAULT_FILENAME: 'formatted-sql.sql',
+      STORAGE_KEY: 'sql-formatter-settings',
+      MARKER_OWNER: 'sql-formatter',
+      VALID_DIALECTS: ['sql', 'postgresql', 'mysql', 'mariadb', 'sqlite', 'transactsql', 'plsql', 'snowflake', 'bigquery', 'spark', 'trino', 'redshift'],
+      VALID_KEYWORD_CASES: ['preserve', 'upper', 'lower'],
+      SQL_KEYWORDS: new Set([
+        'ADD', 'ALL', 'ALTER', 'AND', 'ANY', 'AS', 'ASC', 'BEGIN', 'BETWEEN', 'BREAK', 'BY',
+        'CASE', 'CHECK', 'CLOSE', 'COMMIT', 'CONSTRAINT', 'CONTINUE', 'CREATE', 'CROSS',
+        'CURSOR', 'DECLARE', 'DEFAULT', 'DELETE', 'DESC', 'DISTINCT', 'DROP', 'ELSE', 'END',
+        'EXEC', 'EXECUTE', 'EXISTS', 'FETCH', 'FOR', 'FOREIGN', 'FROM', 'FULL', 'FUNCTION',
+        'GOTO', 'GRANT', 'GROUP', 'HAVING', 'IF', 'IN', 'INDEX', 'INNER', 'INSERT', 'INTO',
+        'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'MERGE', 'NOT', 'NULL', 'ON', 'OPEN', 'OR',
+        'ORDER', 'OUTER', 'OVER', 'PROC', 'PROCEDURE', 'RETURN', 'RIGHT', 'ROLLBACK', 'SELECT',
+        'SET', 'TABLE', 'THEN', 'TOP', 'TRIGGER', 'TRUNCATE', 'UNION', 'UNIQUE', 'UPDATE',
+        'VALUES', 'VIEW', 'WHEN', 'WHERE', 'WHILE', 'WITH'
+      ]),
+      DEFAULT_SETTINGS: {
+        theme: 'dark',
+        indent: '2',
+        fontSize: 14,
+        minimap: false,
+        wordWrap: false,
+        autoFormat: false,
+        autoFormatMaxBytes: 512 * 1024,
+        outputEditable: false,
+        dialect: 'sql',
+        keywordCase: 'preserve'
+      }
+    };
+
+    const DIALECT_OPTIONS = [
+      { value: 'sql', i18n: 'dialect_sql', label: 'SQL (ANSI)' },
+      { value: 'transactsql', i18n: 'dialect_transactsql', label: 'SQL Server (T-SQL)' },
+      { value: 'postgresql', i18n: 'dialect_postgresql', label: 'PostgreSQL' },
+      { value: 'mysql', i18n: 'dialect_mysql', label: 'MySQL' },
+      { value: 'mariadb', i18n: 'dialect_mariadb', label: 'MariaDB' },
+      { value: 'sqlite', i18n: 'dialect_sqlite', label: 'SQLite' },
+      { value: 'plsql', i18n: 'dialect_plsql', label: 'Oracle PL/SQL' },
+      { value: 'snowflake', i18n: 'dialect_snowflake', label: 'Snowflake' },
+      { value: 'bigquery', i18n: 'dialect_bigquery', label: 'BigQuery' },
+      { value: 'spark', i18n: 'dialect_spark', label: 'Spark' },
+      { value: 'trino', i18n: 'dialect_trino', label: 'Trino' },
+      { value: 'redshift', i18n: 'dialect_redshift', label: 'Redshift' }
+    ];
+
+    const EXAMPLE_SQL = `-- Exemplo T-SQL: procedure com parametros e variaveis
+CREATE OR ALTER PROCEDURE dbo.prExemploVendas
+    @DataInicio DATE = NULL,
+    @ClienteId INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @DataHoraAtual DATETIME = GETDATE();
+
+    SELECT
+        c.id,
+        c.nome,
+        SUM(v.valor_total) AS total_vendas
+    FROM dbo.clientes c
+    INNER JOIN dbo.vendas v ON v.cliente_id = c.id
+    WHERE v.data_venda >= ISNULL(@DataInicio, '2025-01-01')
+      AND (@ClienteId IS NULL OR c.id = @ClienteId)
+    GROUP BY c.id, c.nome
+    ORDER BY total_vendas DESC;
+END;`;
+
+    const SHORTCUTS = [
+      ['btn_format', 'Ctrl+Enter'],
+      ['btn_minify', 'Ctrl+Shift+M'],
+      ['btn_validate', 'Ctrl+Shift+V'],
+      ['btn_copy', 'Ctrl+Shift+C'],
+      ['btn_clear', 'Ctrl+L'],
+      ['btn_open', 'Ctrl+O'],
+      ['btn_download', 'Ctrl+S'],
+      ['shortcuts_title', 'F1']
+    ];
+
+    function tt(key, fallback) {
+      if (window.JulianoI18n) {
+        return window.JulianoI18n.tt(key, fallback);
+      }
+      return fallback || key;
+    }
+
+    // ─── State ───────────────────────────────────────────────────
+    let settings = { ...CONSTANTS.DEFAULT_SETTINGS };
+    let inputEditor = null;
+    let outputEditor = null;
+    let debounceTimer = null;
+    let isProcessing = false;
+    let lastResultMode = '';
+    let workerBlobUrl = null;
+
+    // ─── DOM refs ────────────────────────────────────────────────
+    const $ = (sel) => document.querySelector(sel);
+    const dom = {
+      body: document.body,
+      loadingOverlay: $('#loading-overlay'),
+      monacoError: $('#monaco-error'),
+      emptyState: $('#empty-state'),
+      dropOverlay: $('#drop-overlay'),
+      processingIndicator: $('#processing-indicator'),
+      toastContainer: $('#toast-container'),
+      confirmModal: $('#confirm-modal'),
+      shortcutsModal: $('#shortcuts-modal'),
+      settingsPanel: $('#settings-panel'),
+      fileInput: $('#file-input'),
+      resizeHandle: $('#resize-handle'),
+      panelInput: $('#panel-input'),
+      panelOutput: $('#panel-output'),
+      statusValidity: $('#status-validity'),
+      statusLines: $('#status-lines'),
+      statusChars: $('#status-chars'),
+      statusSize: $('#status-size'),
+      statusTime: $('#status-time'),
+      statusErrorPos: $('#status-error-pos'),
+      statusDialect: $('#status-dialect'),
+      statusMode: $('#status-mode'),
+      shortcutsList: $('#shortcuts-list'),
+      chkOutputEditable: $('#chk-output-editable')
+    };
+
+    const actionButtons = [
+      '#btn-format', '#btn-minify', '#btn-validate', '#btn-copy',
+      '#btn-uppercase', '#btn-strip-comments', '#btn-example', '#btn-clear'
+    ].map((s) => $(s));
+
+    // ─── Preferences ─────────────────────────────────────────────
+    const preferences = {
+      load() {
+        try {
+          const raw = localStorage.getItem(CONSTANTS.STORAGE_KEY);
+          if (!raw) return { ...CONSTANTS.DEFAULT_SETTINGS };
+          const parsed = JSON.parse(raw);
+          return preferences.validate(parsed);
+        } catch {
+          return { ...CONSTANTS.DEFAULT_SETTINGS };
+        }
+      },
+
+      validate(obj) {
+        const d = CONSTANTS.DEFAULT_SETTINGS;
+        const validTheme = ['dark', 'light'].includes(obj.theme) ? obj.theme : d.theme;
+        const validIndent = ['2', '4', 'tab'].includes(obj.indent) ? obj.indent : d.indent;
+        const fontSize = Number(obj.fontSize);
+        const autoMax = Number(obj.autoFormatMaxBytes);
+        const dialect = normalizeDialect(obj.dialect);
+        const keywordCase = CONSTANTS.VALID_KEYWORD_CASES.includes(obj.keywordCase) ? obj.keywordCase : d.keywordCase;
+        return {
+          theme: validTheme,
+          indent: validIndent,
+          fontSize: fontSize >= 12 && fontSize <= 20 ? fontSize : d.fontSize,
+          minimap: Boolean(obj.minimap),
+          wordWrap: Boolean(obj.wordWrap),
+          autoFormat: Boolean(obj.autoFormat),
+          autoFormatMaxBytes: autoMax >= 65536 && autoMax <= 4194304 ? autoMax : d.autoFormatMaxBytes,
+          outputEditable: Boolean(obj.outputEditable),
+          dialect,
+          keywordCase
+        };
+      },
+
+      save() {
+        try {
+          localStorage.setItem(CONSTANTS.STORAGE_KEY, JSON.stringify(settings));
+        } catch { /* silent */ }
+      },
+
+      apply() {
+        dom.body.setAttribute('data-theme', settings.theme);
+        if (inputEditor) editorManager.applyOptions();
+        if (outputEditor) editorManager.applyOptions();
+        syncSettingsUI();
+      }
+    };
+
+    function normalizeDialect(dialect) {
+      if (dialect === 'tsql') return 'transactsql';
+      return CONSTANTS.VALID_DIALECTS.includes(dialect) ? dialect : CONSTANTS.DEFAULT_SETTINGS.dialect;
+    }
+
+    function getDialectLabel(dialect) {
+      const normalized = normalizeDialect(dialect);
+      const option = DIALECT_OPTIONS.find((item) => item.value === normalized);
+      return option ? tt(option.i18n, option.label) : normalized;
+    }
+
+    function populateDialectSelects() {
+      ['toolbar-dialect', 'setting-dialect'].forEach((id) => {
+        const select = $(`#${id}`);
+        if (!select) return;
+        const current = select.value || settings.dialect;
+        select.innerHTML = '';
+        DIALECT_OPTIONS.forEach((option) => {
+          const el = document.createElement('option');
+          el.value = option.value;
+          el.textContent = tt(option.i18n, option.label);
+          el.setAttribute('data-i18n', option.i18n);
+          select.appendChild(el);
+        });
+        select.value = normalizeDialect(current);
+      });
+    }
+
+    function applyDialect(dialect) {
+      settings.dialect = normalizeDialect(dialect);
+      const toolbar = $('#toolbar-dialect');
+      const setting = $('#setting-dialect');
+      if (toolbar) toolbar.value = settings.dialect;
+      if (setting) setting.value = settings.dialect;
+      if (inputEditor) editorManager.applyOptions();
+      preferences.save();
+      statusBar.setDialect(settings.dialect);
+    }
+
+    function highlightDialectSelector() {
+      const wrap = $('#toolbar-dialect-wrap');
+      if (!wrap) return;
+      wrap.classList.add('highlight');
+      wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      setTimeout(() => wrap.classList.remove('highlight'), 2000);
+    }
+
+    function syncSettingsUI() {
+      $('#setting-theme').value = settings.theme;
+      $('#setting-indent').value = settings.indent;
+      $('#setting-font-size').value = settings.fontSize;
+      $('#setting-minimap').checked = settings.minimap;
+      $('#setting-word-wrap').checked = settings.wordWrap;
+      $('#setting-auto-format').checked = settings.autoFormat;
+      $('#setting-auto-max').value = Math.round(settings.autoFormatMaxBytes / 1024);
+      $('#setting-keyword-case').value = settings.keywordCase;
+      dom.chkOutputEditable.checked = settings.outputEditable;
+      applyDialect(settings.dialect);
+    }
+
+    function getMonacoLanguage() {
+      if (settings.dialect === 'postgresql') return 'pgsql';
+      return 'sql';
+    }
+
+    function getFormatOptions(overrides = {}) {
+      return {
+        language: settings.dialect,
+        tabWidth: settings.indent === 'tab' ? 2 : Number(settings.indent),
+        useTabs: settings.indent === 'tab',
+        keywordCase: settings.keywordCase,
+        linesBetweenQueries: 0,
+        ...overrides
+      };
+    }
+
+    // ─── Notifications ───────────────────────────────────────────
+    const notifications = {
+      show(message, type = 'info', duration = 3500) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        dom.toastContainer.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transition = 'opacity 0.3s';
+          setTimeout(() => toast.remove(), 300);
+        }, duration);
+      },
+      success(msg) { notifications.show(msg, 'success'); },
+      error(msg) { notifications.show(msg, 'error', 5000); },
+      info(msg) { notifications.show(msg, 'info'); }
+    };
+
+    // ─── Modals ──────────────────────────────────────────────────
+    const modals = {
+      openConfirm() {
+        dom.confirmModal.classList.add('open');
+        $('#confirm-ok').focus();
+      },
+      closeConfirm() { dom.confirmModal.classList.remove('open'); },
+      openShortcuts() {
+        dom.shortcutsModal.classList.add('open');
+        $('#shortcuts-close').focus();
+      },
+      closeShortcuts() { dom.shortcutsModal.classList.remove('open'); },
+      openSettings() { dom.settingsPanel.classList.add('open'); },
+      closeSettings() { dom.settingsPanel.classList.remove('open'); }
+    };
+
+    // ─── Validation ──────────────────────────────────────────────
+    const validation = {
+      isEmpty(text) {
+        return !text || text.trim().length === 0;
+      },
+
+      positionToLineColumn(text, position) {
+        const lines = text.substring(0, position).split('\n');
+        return { line: lines.length, column: lines[lines.length - 1].length + 1 };
+      },
+
+      extractPosition(message) {
+        const lineColMatch = message.match(/line\s+(\d+)\s+column\s+(\d+)/i);
+        if (lineColMatch) {
+          return { line: parseInt(lineColMatch[1], 10), column: parseInt(lineColMatch[2], 10) };
+        }
+        const posMatch = message.match(/position\s+(\d+)/i);
+        if (posMatch) return parseInt(posMatch[1], 10);
+        return null;
+      },
+
+      humanizeError(rawMessage, line, col) {
+        let friendly = rawMessage.replace(/^Parse error:\s*/i, '');
+        const needsDialectHint = /default\s+"sql"\s+dialect/i.test(rawMessage) ||
+          /more specific dialect/i.test(rawMessage);
+        if (friendly.includes('Unexpected')) {
+          friendly += ' — Token inesperado. Verifique a sintaxe SQL e o dialeto selecionado.';
+        }
+        if (needsDialectHint) {
+          friendly += ` ${tt('msg_dialect_hint', 'Selecione SQL Server (T-SQL) ou outro dialeto no seletor acima.')}`;
+        }
+        if (line && col) {
+          friendly += ` (linha ${line}, coluna ${col})`;
+        }
+        return { message: friendly, needsDialectHint };
+      },
+
+      parse(text, formatOptions = null) {
+        if (validation.isEmpty(text)) {
+          return { ok: false, error: { message: tt('msg_empty', 'SQL vazio. Insira um conteúdo para processar.'), line: null, column: null } };
+        }
+        if (typeof sqlFormatter === 'undefined' || typeof sqlFormatter.format !== 'function') {
+          return { ok: false, error: { message: 'Biblioteca sql-formatter não carregada.', line: null, column: null } };
+        }
+        try {
+          formatting.formatSql(text, formatOptions || {});
+          return { ok: true, error: null };
+        } catch (e) {
+          let line = null;
+          let column = null;
+          const extracted = validation.extractPosition(e.message || '');
+          if (typeof extracted === 'number') {
+            const lc = validation.positionToLineColumn(text, extracted);
+            line = lc.line;
+            column = lc.column;
+          } else if (extracted && extracted.line) {
+            line = extracted.line;
+            column = extracted.column;
+          }
+          const { message, needsDialectHint } = validation.humanizeError(e.message || 'Erro de sintaxe SQL.', line, column);
+          if (needsDialectHint) highlightDialectSelector();
+          return { ok: false, error: { message, raw: e.message, line, column } };
+        }
+      }
+    };
+
+    // ─── Formatting ──────────────────────────────────────────────
+    const formatting = {
+      PROC_HEADER_RE: /^(CREATE\s+(?:OR\s+ALTER\s+)?(?:PROCEDURE|PROC)\s+\S+[\s\S]*?)^(\s*AS\s*\r?\n\s*BEGIN\s*\r?\n(?:\s*SET\s+NOCOUNT\s+ON\s*;?\s*\r?\n(?:\s*\r?\n)?)?)/gim,
+      PROC_STMT_KEYWORDS: 'CLOSE|DEALLOCATE|OPEN|FETCH|WHILE|IF|ELSE|SET|DECLARE|DROP|CREATE|INSERT|UPDATE|DELETE|SELECT|EXEC|EXECUTE|RETURN|RAISERROR|THROW|PRINT|TRUNCATE|ALTER|MERGE|WITH|BEGIN',
+
+      isProceduralDialect(dialect) {
+        return dialect === 'transactsql' || dialect === 'tsql';
+      },
+
+      prepareForFormat(text, dialect) {
+        if (!formatting.isProceduralDialect(dialect)) return text;
+        return text.replace(
+          formatting.PROC_HEADER_RE,
+          '/* sql-formatter-disable */\n$&\n/* sql-formatter-enable */\n'
+        );
+      },
+
+      splitMergedProceduralLines(text) {
+        const kw = formatting.PROC_STMT_KEYWORDS;
+        return text
+          .replace(new RegExp(`\\bEND\\s+(${kw})\\b`, 'gi'), 'END\n$1')
+          .replace(new RegExp(`;\\s*(${kw})\\b`, 'gi'), ';\n$1')
+          .replace(/\b(WHILE\b(?:(?!;)[^\n])*)\s+BEGIN\b/gi, '$1\nBEGIN')
+          .replace(/\)\s*BEGIN\b/gi, ')\nBEGIN')
+          .replace(/^SET\s*\r?\n\s*(@)/gim, 'SET $1');
+      },
+
+      countParensOutsideStrings(line) {
+        let open = 0;
+        let close = 0;
+        let inString = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === "'") {
+            if (inString && line[i + 1] === "'") { i++; continue; }
+            inString = !inString;
+            continue;
+          }
+          if (inString) continue;
+          if (ch === '(') open++;
+          if (ch === ')') close++;
+        }
+        return { open, close };
+      },
+
+      isProceduralBegin(trimmed, parenDepthAtLine, openParens, closeParens) {
+        const depthAfterLine = parenDepthAtLine + openParens - closeParens;
+        if (/^BEGIN\s*;?\s*(--.*)?$/i.test(trimmed) && parenDepthAtLine === 0) return true;
+        if (/\)\s*BEGIN\s*;?\s*(--.*)?$/i.test(trimmed) && depthAfterLine === 0) return true;
+        return false;
+      },
+
+      isProceduralEnd(trimmed, parenDepth, formatterIndentLen) {
+        if (parenDepth > 0) return false;
+        if (!/^END\s*;?\s*(--.*)?$/i.test(trimmed)) return false;
+        if (formatterIndentLen >= 6) return false;
+        return true;
+      },
+
+      isIfStatement(trimmed, parenDepth) {
+        return parenDepth === 0 && /^IF\b/i.test(trimmed);
+      },
+
+      isElseLine(trimmed, parenDepth) {
+        return parenDepth === 0 && /^ELSE\b/i.test(trimmed);
+      },
+
+      findProcedureBeginIndex(lines) {
+        let inProc = false;
+        for (let i = 0; i < lines.length; i++) {
+          const t = lines[i].trim();
+          if (/^CREATE\s+(?:OR\s+ALTER\s+)?(?:PROCEDURE|PROC)\b/i.test(t)) inProc = true;
+          if (inProc && /^BEGIN\s*;?\s*$/i.test(t)) return i;
+        }
+        return -1;
+      },
+
+      findReindentStart(lines, procBeginIdx) {
+        for (let i = procBeginIdx; i < lines.length; i++) {
+          if (/SET\s+NOCOUNT\s+ON/i.test(lines[i])) return i + 1;
+        }
+        return procBeginIdx + 1;
+      },
+
+      applyProceduralIndent(text, tabWidth, useTabs) {
+        const unit = useTabs ? '\t' : ' '.repeat(tabWidth);
+        const lines = formatting.splitMergedProceduralLines(text).split('\n');
+        const procBeginIdx = formatting.findProcedureBeginIndex(lines);
+        if (procBeginIdx < 0) return text;
+
+        const reindentStart = formatting.findReindentStart(lines, procBeginIdx);
+        let blockDepth = 1;
+        let parenDepth = 0;
+        let ifPending = false;
+        const result = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const trimmed = line.trim();
+
+          if (i < procBeginIdx || (i >= procBeginIdx && i < reindentStart)) {
+            if (i === procBeginIdx + 1 && /SET\s+NOCOUNT\s+ON/i.test(trimmed)) {
+              result.push(unit.repeat(1) + trimmed);
+            } else {
+              result.push(line);
+            }
+            continue;
+          }
+
+          if (!trimmed) {
+            result.push('');
+            continue;
+          }
+
+          const parens = formatting.countParensOutsideStrings(trimmed);
+          const parenDepthAtLine = parenDepth;
+          const formatterIndent = line.match(/^(\s*)/)[1];
+          const content = line.trimStart();
+
+          let effectiveDepth = blockDepth;
+          if (ifPending && parenDepthAtLine === 0 &&
+              !formatting.isProceduralBegin(trimmed, parenDepthAtLine, parens.open, parens.close) &&
+              !formatting.isElseLine(trimmed, 0)) {
+            effectiveDepth = blockDepth + 1;
+            ifPending = false;
+          }
+
+          if (formatting.isProceduralEnd(trimmed, parenDepthAtLine, formatterIndent.length)) {
+            blockDepth = Math.max(0, blockDepth - 1);
+            effectiveDepth = blockDepth;
+            ifPending = false;
+          }
+
+          result.push(unit.repeat(effectiveDepth) + formatterIndent + content);
+
+          parenDepth += parens.open - parens.close;
+          if (parenDepth < 0) parenDepth = 0;
+
+          if (formatting.isProceduralBegin(trimmed, parenDepthAtLine, parens.open, parens.close)) {
+            blockDepth++;
+            ifPending = false;
+          } else if (formatting.isIfStatement(trimmed, parenDepthAtLine) && !/\bBEGIN\b/i.test(trimmed)) {
+            ifPending = true;
+          } else if (formatting.isElseLine(trimmed, parenDepthAtLine)) {
+            ifPending = false;
+          }
+        }
+
+        return result.join('\n');
+      },
+
+      formatJoinOnClauses(text, tabWidth, useTabs) {
+        const extraIndent = useTabs ? '\t' : ' '.repeat(tabWidth);
+        const joinOnPattern = /^((?:(?:INNER|LEFT|RIGHT|FULL|CROSS)\s+(?:OUTER\s+)?)?JOIN\s+.+?)\s+ON\s+(.+)$/i;
+        const lines = text.split('\n');
+        const result = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const trimmed = line.trimStart();
+          const lineIndent = line.slice(0, line.length - trimmed.length);
+
+          if (!/\bJOIN\b/i.test(trimmed)) {
+            result.push(line);
+            continue;
+          }
+
+          const match = trimmed.match(joinOnPattern);
+          if (!match) {
+            result.push(line);
+            continue;
+          }
+
+          const onIndent = lineIndent + extraIndent;
+          result.push(lineIndent + match[1]);
+          result.push(onIndent + 'ON ' + match[2]);
+
+          let j = i + 1;
+          while (j < lines.length) {
+            const nextTrimmed = lines[j].trimStart();
+            if (!/^AND\b/i.test(nextTrimmed)) break;
+            result.push(onIndent + nextTrimmed);
+            j++;
+          }
+          i = j - 1;
+        }
+
+        return result.join('\n');
+      },
+
+      cleanupResult(text, dialect, tabWidth, useTabs) {
+        let result = text
+          .replace(/^\s*\/\*\s*sql-formatter-disable\s*\*\/\s*\r?\n?/gm, '')
+          .replace(/\r?\n?\s*\/\*\s*sql-formatter-enable\s*\*\/\s*/g, '\n')
+          .replace(/^SET\s*\r?\n\s+NOCOUNT\s+ON\s*;?/gim, 'SET NOCOUNT ON;')
+          .replace(/\r?\n{3,}/g, '\n\n');
+        if (formatting.isProceduralDialect(dialect)) {
+          result = formatting.applyProceduralIndent(result, tabWidth, useTabs);
+        }
+        result = formatting.formatJoinOnClauses(result, tabWidth, useTabs);
+        return result;
+      },
+
+      formatSql(text, overrides = {}) {
+        const options = getFormatOptions(overrides);
+        const prepared = formatting.prepareForFormat(text, options.language);
+        const formatted = sqlFormatter.format(prepared, options);
+        return formatting.cleanupResult(formatted, options.language, options.tabWidth, options.useTabs);
+      },
+
+      minifySql(text) {
+        const options = getFormatOptions({
+          tabWidth: 0,
+          denseOperators: true,
+          linesBetweenQueries: 0
+        });
+        const prepared = formatting.prepareForFormat(text, options.language);
+        const formatted = sqlFormatter.format(prepared, options);
+        return formatting.cleanupResult(formatted, options.language, options.tabWidth, options.useTabs)
+          .replace(/\s*\n+\s*/g, ' ')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
+      },
+
+      uppercaseKeywords(text) {
+        const options = getFormatOptions({ keywordCase: 'upper' });
+        const prepared = formatting.prepareForFormat(text, options.language);
+        const formatted = sqlFormatter.format(prepared, options);
+        return formatting.cleanupResult(formatted, options.language, options.tabWidth, options.useTabs);
+      },
+
+      stripSqlComments(text) {
+        let result = '';
+        let i = 0;
+        const len = text.length;
+        while (i < len) {
+          const ch = text[i];
+          if (ch === "'") {
+            result += ch;
+            i++;
+            while (i < len) {
+              result += text[i];
+              if (text[i] === "'" && i + 1 < len && text[i + 1] === "'") {
+                result += text[i + 1];
+                i += 2;
+              } else if (text[i] === "'") {
+                i++;
+                break;
+              } else {
+                i++;
+              }
+            }
+          } else if (ch === '-' && i + 1 < len && text[i + 1] === '-') {
+            i += 2;
+            while (i < len && text[i] !== '\n') i++;
+          } else if (ch === '/' && i + 1 < len && text[i + 1] === '*') {
+            i += 2;
+            while (i + 1 < len && !(text[i] === '*' && text[i + 1] === '/')) i++;
+            i += 2;
+          } else {
+            result += ch;
+            i++;
+          }
+        }
+        return result;
+      }
+    };
+
+    // ─── Web Worker ──────────────────────────────────────────────
+    function getWorkerCode() {
+      return `
+        importScripts('${new URL('./min/sql-formatter.min.js', window.location.href).href}');
+        self.onmessage = function(e) {
+          const { action, text, options } = e.data;
+          try {
+            let result;
+            if (action === 'minify') {
+              const formatted = sqlFormatter.format(text, Object.assign({}, options, {
+                tabWidth: 0,
+                denseOperators: true,
+                linesBetweenQueries: 0
+              }));
+              result = formatted.replace(/\\s*\\n+\\s*/g, ' ').replace(/\\s{2,}/g, ' ').trim();
+            } else if (action === 'uppercase') {
+              result = sqlFormatter.format(text, Object.assign({}, options, { keywordCase: 'upper' }));
+            } else {
+              result = sqlFormatter.format(text, options);
+            }
+            self.postMessage({ ok: true, result: result });
+          } catch (err) {
+            self.postMessage({ ok: false, error: err.message });
+          }
+        };
+      `;
+    }
+
+    function runInWorker(action, text, options) {
+      return new Promise((resolve, reject) => {
+        if (!workerBlobUrl) {
+          workerBlobUrl = URL.createObjectURL(new Blob([getWorkerCode()], { type: 'application/javascript' }));
+        }
+        const worker = new Worker(workerBlobUrl);
+        const timeout = setTimeout(() => {
+          worker.terminate();
+          reject(new Error(tt('msg_timeout', 'Tempo limite excedido no processamento.')));
+        }, 60000);
+        worker.onmessage = (e) => {
+          clearTimeout(timeout);
+          worker.terminate();
+          if (e.data.ok) resolve(e.data.result);
+          else reject(new Error(e.data.error));
+        };
+        worker.onerror = (e) => {
+          clearTimeout(timeout);
+          worker.terminate();
+          reject(new Error(e.message || 'Erro no Web Worker.'));
+        };
+        worker.postMessage({ action, text, options });
+      });
+    }
+
+    // ─── Editor Manager ──────────────────────────────────────────
+    const editorManager = {
+      getBaseOptions() {
+        return {
+          language: getMonacoLanguage(),
+          theme: settings.theme === 'dark' ? 'vs-dark' : 'vs',
+          fontSize: settings.fontSize,
+          fontFamily: "'Cascadia Code', 'Fira Code', Consolas, 'Courier New', monospace",
+          lineNumbers: 'on',
+          minimap: { enabled: settings.minimap },
+          wordWrap: settings.wordWrap ? 'on' : 'off',
+          scrollBeyondLastLine: false,
+          automaticLayout: true,
+          smoothScrolling: true,
+          bracketPairColorization: { enabled: true },
+          guides: { indentation: true, bracketPairs: true },
+          folding: true,
+          renderWhitespace: 'selection',
+          formatOnPaste: false,
+          formatOnType: false,
+          tabSize: settings.indent === 'tab' ? 4 : Number(settings.indent),
+          insertSpaces: settings.indent !== 'tab'
+        };
+      },
+
+      init(inputContainer, outputContainer) {
+        inputEditor = monaco.editor.create(inputContainer, {
+          ...editorManager.getBaseOptions(),
+          value: ''
+        });
+        outputEditor = monaco.editor.create(outputContainer, {
+          ...editorManager.getBaseOptions(),
+          value: '',
+          readOnly: !settings.outputEditable
+        });
+
+        editorManager.setupKeywordLineHighlight(inputEditor);
+        editorManager.setupKeywordLineHighlight(outputEditor);
+
+        inputEditor.onDidChangeModelContent(() => {
+          editorManager.clearMarkers();
+          statusBar.updateFromInput();
+          scheduleAutoFormat();
+        });
+
+        dom.chkOutputEditable.addEventListener('change', () => {
+          settings.outputEditable = dom.chkOutputEditable.checked;
+          outputEditor.updateOptions({ readOnly: !settings.outputEditable });
+          preferences.save();
+        });
+      },
+
+      applyOptions() {
+        const opts = editorManager.getBaseOptions();
+        inputEditor.updateOptions(opts);
+        outputEditor.updateOptions({ ...opts, readOnly: !settings.outputEditable });
+        monaco.editor.setTheme(opts.theme);
+      },
+
+      getInputValue() { return inputEditor ? inputEditor.getValue() : ''; },
+      getOutputValue() { return outputEditor ? outputEditor.getValue() : ''; },
+
+      setInputValue(text) {
+        if (inputEditor) inputEditor.setValue(text);
+      },
+
+      setOutputValue(text) {
+        if (outputEditor) {
+          outputEditor.setValue(text);
+          dom.emptyState.classList.toggle('hidden', text.length > 0);
+        }
+      },
+
+      clearBoth() {
+        if (inputEditor) inputEditor.setValue('');
+        if (outputEditor) outputEditor.setValue('');
+        dom.emptyState.classList.remove('hidden');
+        editorManager.clearMarkers();
+        lastResultMode = '';
+      },
+
+      clearMarkers() {
+        if (inputEditor) {
+          monaco.editor.setModelMarkers(inputEditor.getModel(), CONSTANTS.MARKER_OWNER, []);
+        }
+      },
+
+      setErrorMarker(line, column, message) {
+        if (!inputEditor || !line) return;
+        monaco.editor.setModelMarkers(inputEditor.getModel(), CONSTANTS.MARKER_OWNER, [{
+          severity: monaco.MarkerSeverity.Error,
+          startLineNumber: line,
+          startColumn: column || 1,
+          endLineNumber: line,
+          endColumn: (column || 1) + 1,
+          message: message
+        }]);
+        inputEditor.revealPositionInCenter({ lineNumber: line, column: column || 1 });
+        inputEditor.setPosition({ lineNumber: line, column: column || 1 });
+        inputEditor.focus();
+      },
+
+      resize() {
+        if (inputEditor) inputEditor.layout();
+        if (outputEditor) outputEditor.layout();
+      },
+
+      isSqlKeywordAtPosition(model, position) {
+        if (!model || !position) return false;
+        const lineContent = model.getLineContent(position.lineNumber);
+        const languageId = model.getLanguageId();
+        const columnIndex = position.column - 1;
+
+        try {
+          const tokenLines = monaco.editor.tokenize(lineContent, languageId);
+          const tokens = tokenLines[0] || [];
+          for (let i = 0; i < tokens.length; i++) {
+            const start = tokens[i].offset;
+            const end = i + 1 < tokens.length ? tokens[i + 1].offset : lineContent.length;
+            if (columnIndex >= start && columnIndex < end) {
+              const tokenType = String(tokens[i].type || tokens[i].scopes || '');
+              if (tokenType.includes('keyword') || tokenType.includes('operator')) return true;
+            }
+          }
+        } catch (_) {
+          /* fallback to word list */
+        }
+
+        const word = model.getWordAtPosition(position);
+        return Boolean(word && CONSTANTS.SQL_KEYWORDS.has(word.word.toUpperCase()));
+      },
+
+      setupKeywordLineHighlight(editor) {
+        let decorationCollection = null;
+
+        function clearHighlight() {
+          if (decorationCollection) {
+            decorationCollection.clear();
+            decorationCollection = null;
+          }
+        }
+
+        function updateHighlight() {
+          clearHighlight();
+          const position = editor.getPosition();
+          const model = editor.getModel();
+          if (!position || !model) return;
+          if (!editorManager.isSqlKeywordAtPosition(model, position)) return;
+
+          const line = position.lineNumber;
+          decorationCollection = editor.createDecorationsCollection([{
+            range: new monaco.Range(line, 1, line, model.getLineMaxColumn(line)),
+            options: { isWholeLine: true, className: 'keyword-line-highlight' }
+          }]);
+        }
+
+        editor.onDidChangeCursorPosition(updateHighlight);
+        editor.onDidChangeModelContent(updateHighlight);
+      }
+    };
+
+    // ─── Status Bar ──────────────────────────────────────────────
+    const statusBar = {
+      formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+      },
+
+      getByteSize(text) {
+        return new TextEncoder().encode(text).length;
+      },
+
+      updateFromInput() {
+        const text = editorManager.getInputValue();
+        const lines = text ? text.split('\n').length : 0;
+        const chars = text.length;
+        const bytes = statusBar.getByteSize(text);
+        dom.statusLines.textContent = `${tt('status_lines', 'Linhas')}: ${lines}`;
+        dom.statusChars.textContent = `${tt('status_chars', 'Caracteres')}: ${chars}`;
+        dom.statusSize.textContent = `${tt('status_size', 'Tamanho')}: ${statusBar.formatBytes(bytes)}`;
+      },
+
+      setValidity(valid, message) {
+        dom.statusValidity.textContent = message || (valid ? tt('status_valid', 'SQL válido') : tt('status_invalid', 'SQL inválido'));
+        dom.statusValidity.className = `status-item ${valid ? 'status-valid' : 'status-invalid'}`;
+      },
+
+      setTime(ms) {
+        dom.statusTime.textContent = `${tt('status_time', 'Tempo')}: ${ms.toFixed(1)} ms`;
+      },
+
+      setErrorPos(line, col) {
+        if (line) {
+          dom.statusErrorPos.textContent = `${tt('status_error', 'Erro')}: L${line}:C${col || 1}`;
+        } else {
+          dom.statusErrorPos.textContent = '';
+        }
+      },
+
+      setMode(mode) {
+        dom.statusMode.textContent = mode || '';
+      },
+
+      setDialect(dialect) {
+        dom.statusDialect.textContent = `${tt('status_dialect', 'Dialeto')}: ${getDialectLabel(dialect)}`;
+      },
+
+      reset() {
+        dom.statusValidity.textContent = '—';
+        dom.statusValidity.className = 'status-item';
+        dom.statusLines.textContent = `${tt('status_lines', 'Linhas')}: 0`;
+        dom.statusChars.textContent = `${tt('status_chars', 'Caracteres')}: 0`;
+        dom.statusSize.textContent = `${tt('status_size', 'Tamanho')}: 0 B`;
+        dom.statusTime.textContent = `${tt('status_time', 'Tempo')}: —`;
+        dom.statusErrorPos.textContent = '';
+        dom.statusMode.textContent = '';
+        statusBar.setDialect(settings.dialect);
+      }
+    };
+
+    // ─── File Operations ─────────────────────────────────────────
+    const fileOps = {
+      validateFile(file) {
+        if (!file) return tt('msg_no_file', 'Nenhum arquivo selecionado.');
+        const name = file.name.toLowerCase();
+        if (!name.endsWith('.sql')) return tt('msg_invalid_ext', 'Extensão inválida. Selecione um arquivo .sql.');
+        const allowedTypes = ['', 'text/plain', 'application/sql', 'application/x-sql', 'text/x-sql'];
+        if (file.type && !allowedTypes.includes(file.type)) {
+          return tt('msg_invalid_type', 'Tipo de arquivo inválido.');
+        }
+        if (file.size > CONSTANTS.FILE_MAX_BYTES) {
+          return `Arquivo muito grande. Limite: ${statusBar.formatBytes(CONSTANTS.FILE_MAX_BYTES)}.`;
+        }
+        if (file.size === 0) return 'O arquivo está vazio.';
+        return null;
+      },
+
+      readFile(file) {
+        return new Promise((resolve, reject) => {
+          const error = fileOps.validateFile(file);
+          if (error) { reject(new Error(error)); return; }
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
+          reader.readAsText(file);
+        });
+      },
+
+      async loadFile(file) {
+        try {
+          const content = await fileOps.readFile(file);
+          editorManager.setInputValue(content);
+          notifications.success(`Arquivo "${file.name}" carregado com sucesso.`);
+          statusBar.updateFromInput();
+        } catch (e) {
+          notifications.error(e.message);
+        }
+      },
+
+      download(content) {
+        if (!content || content.trim().length === 0) {
+          notifications.error('Não há conteúdo no resultado para baixar.');
+          return;
+        }
+        try {
+          const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = CONSTANTS.DEFAULT_FILENAME;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          notifications.success('Download iniciado.');
+        } catch {
+          notifications.error('Falha ao criar o download.');
+        }
+      }
+    };
+
+    // ─── Operations ──────────────────────────────────────────────
+    function setProcessing(active) {
+      isProcessing = active;
+      dom.processingIndicator.classList.toggle('active', active);
+      actionButtons.forEach((btn) => { if (btn) btn.disabled = active; });
+    }
+
+    async function processSql(action, options = {}) {
+      const { silent = false, auto = false } = options;
+      const text = editorManager.getInputValue();
+      const start = performance.now();
+
+      if (validation.isEmpty(text)) {
+        if (!silent) notifications.error(tt('msg_empty', 'SQL vazio. Insira um conteúdo para processar.'));
+        statusBar.setValidity(false, tt('msg_empty_short', 'SQL vazio'));
+        return;
+      }
+
+      const byteSize = statusBar.getByteSize(text);
+      if (auto && byteSize > settings.autoFormatMaxBytes) return;
+
+      if (!auto) setProcessing(true);
+
+      const formatOptions = getFormatOptions();
+
+      try {
+        let result;
+        const useWorker = byteSize > CONSTANTS.WORKER_THRESHOLD_BYTES &&
+          ['format', 'minify', 'uppercase'].includes(action);
+
+        if (action === 'stripComments') {
+          const stripped = formatting.stripSqlComments(text);
+          const parsed = validation.parse(stripped, formatOptions);
+          if (!parsed.ok) {
+            editorManager.setErrorMarker(parsed.error.line, parsed.error.column, parsed.error.message);
+            statusBar.setValidity(false);
+            statusBar.setErrorPos(parsed.error.line, parsed.error.column);
+            if (!silent) notifications.error(parsed.error.message);
+            return;
+          }
+          result = formatting.formatSql(stripped);
+        } else if (useWorker) {
+          const workerAction = action === 'minify' ? 'minify' : (action === 'uppercase' ? 'uppercase' : 'format');
+          const prepared = formatting.prepareForFormat(text, settings.dialect);
+          result = await runInWorker(workerAction, prepared, formatOptions);
+          result = formatting.cleanupResult(result, settings.dialect, formatOptions.tabWidth, formatOptions.useTabs);
+          if (action === 'minify') {
+            result = result.replace(/\s*\n+\s*/g, ' ').replace(/\s{2,}/g, ' ').trim();
+          }
+        } else {
+          const parsed = validation.parse(text, formatOptions);
+          if (!parsed.ok) {
+            editorManager.setErrorMarker(parsed.error.line, parsed.error.column, parsed.error.message);
+            statusBar.setValidity(false);
+            statusBar.setErrorPos(parsed.error.line, parsed.error.column);
+            if (!silent) notifications.error(parsed.error.message);
+            return;
+          }
+          if (action === 'minify') {
+            result = formatting.minifySql(text);
+          } else if (action === 'uppercase') {
+            result = formatting.uppercaseKeywords(text);
+          } else {
+            result = formatting.formatSql(text);
+          }
+        }
+
+        if (action !== 'validate') {
+          editorManager.setOutputValue(result);
+          const modeLabels = {
+            minify: tt('mode_minify', 'Compactado'),
+            uppercase: tt('mode_uppercase', 'Keywords maiúsculas'),
+            stripComments: tt('mode_strip', 'Comentários removidos')
+          };
+          lastResultMode = modeLabels[action] || tt('mode_format', 'Formatado');
+          statusBar.setMode(lastResultMode);
+        }
+
+        editorManager.clearMarkers();
+        statusBar.setValidity(true);
+        statusBar.setErrorPos(null, null);
+        const elapsed = performance.now() - start;
+        statusBar.setTime(elapsed);
+
+        if (!silent) {
+          const messages = {
+            format: tt('msg_format_ok', 'SQL formatado com sucesso.'),
+            minify: tt('msg_minify_ok', 'SQL compactado com sucesso.'),
+            uppercase: tt('msg_uppercase_ok', 'Keywords convertidas para maiúsculas.'),
+            stripComments: tt('msg_strip_ok', 'Comentários removidos com sucesso.')
+          };
+          notifications.success(messages[action] || tt('msg_done', 'Operação concluída.'));
+        }
+      } catch (e) {
+        const parsed = validation.parse(text, formatOptions);
+        if (!parsed.ok) {
+          editorManager.setErrorMarker(parsed.error.line, parsed.error.column, parsed.error.message);
+          statusBar.setErrorPos(parsed.error.line, parsed.error.column);
+        }
+        statusBar.setValidity(false);
+        if (!silent) notifications.error(e.message || parsed.error?.message || 'Erro ao processar SQL.');
+      } finally {
+        if (!auto) setProcessing(false);
+      }
+    }
+
+    function validateOnly() {
+      const text = editorManager.getInputValue();
+      const start = performance.now();
+      editorManager.clearMarkers();
+
+      if (validation.isEmpty(text)) {
+        statusBar.setValidity(false, tt('msg_empty_short', 'SQL vazio'));
+        statusBar.setErrorPos(null, null);
+        notifications.error(tt('msg_empty_validate', 'SQL vazio. Insira um conteúdo para validar.'));
+        return;
+      }
+
+      const parsed = validation.parse(text, getFormatOptions());
+      const elapsed = performance.now() - start;
+      statusBar.setTime(elapsed);
+
+      if (parsed.ok) {
+        statusBar.setValidity(true, tt('status_valid', 'SQL válido'));
+        statusBar.setErrorPos(null, null);
+        notifications.success(tt('status_valid', 'SQL válido.'));
+      } else {
+        editorManager.setErrorMarker(parsed.error.line, parsed.error.column, parsed.error.message);
+        statusBar.setValidity(false);
+        statusBar.setErrorPos(parsed.error.line, parsed.error.column);
+        notifications.error(parsed.error.message);
+      }
+    }
+
+    // ─── Auto Format ─────────────────────────────────────────────
+    function scheduleAutoFormat() {
+      if (!settings.autoFormat) return;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const text = editorManager.getInputValue();
+        if (validation.isEmpty(text)) return;
+        const byteSize = statusBar.getByteSize(text);
+        if (byteSize > settings.autoFormatMaxBytes) {
+          notifications.info(tt('msg_auto_large', 'Conteúdo grande demais para formatação automática. Use o botão Formatar.'));
+          return;
+        }
+        const parsed = validation.parse(text, getFormatOptions());
+        if (!parsed.ok) return;
+        processSql('format', { silent: true, auto: true });
+      }, CONSTANTS.DEBOUNCE_MS);
+    }
+
+    // ─── Clipboard ───────────────────────────────────────────────
+    async function copyResult() {
+      const text = editorManager.getOutputValue();
+      if (!text || text.trim().length === 0) {
+        notifications.error('Não há resultado para copiar.');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        notifications.success('Resultado copiado para a área de transferência.');
+      } catch {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          notifications.success('Resultado copiado para a área de transferência.');
+        } catch {
+          notifications.error('Falha ao copiar. Verifique as permissões do navegador.');
+        }
+      }
+    }
+
+    // ─── Clear ───────────────────────────────────────────────────
+    function requestClear() {
+      const hasContent = editorManager.getInputValue().length > 0 || editorManager.getOutputValue().length > 0;
+      if (hasContent) {
+        modals.openConfirm();
+      }
+    }
+
+    function doClear() {
+      editorManager.clearBoth();
+      statusBar.reset();
+      modals.closeConfirm();
+      notifications.info('Editores limpos.');
+    }
+
+    // ─── Example ─────────────────────────────────────────────────
+    function loadExample() {
+      applyDialect('transactsql');
+      editorManager.setInputValue(EXAMPLE_SQL);
+      statusBar.updateFromInput();
+      notifications.info(tt('msg_example', 'Exemplo carregado.'));
+    }
+
+    // ─── Resize panels ─────────────────────────────────────────
+    function initResize() {
+      let isResizing = false;
+      const handle = dom.resizeHandle;
+      const main = $('#main-area');
+
+      handle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        handle.classList.add('active');
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        const rect = main.getBoundingClientRect();
+        const pct = ((e.clientX - rect.left) / rect.width) * 100;
+        const clamped = Math.min(Math.max(pct, 20), 80);
+        dom.panelInput.style.flex = `0 0 ${clamped}%`;
+        dom.panelOutput.style.flex = `0 0 ${100 - clamped}%`;
+        editorManager.resize();
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isResizing) {
+          isResizing = false;
+          handle.classList.remove('active');
+        }
+      });
+    }
+
+    // ─── Drag and drop ───────────────────────────────────────────
+    function initDragDrop() {
+      const panel = dom.panelInput;
+      panel.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dom.dropOverlay.classList.add('active');
+      });
+      panel.addEventListener('dragleave', (e) => {
+        if (!panel.contains(e.relatedTarget)) {
+          dom.dropOverlay.classList.remove('active');
+        }
+      });
+      panel.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dom.dropOverlay.classList.remove('active');
+        const file = e.dataTransfer.files[0];
+        if (file) fileOps.loadFile(file);
+      });
+    }
+
+    // ─── Keyboard shortcuts ──────────────────────────────────────
+    function isMod(e) { return e.ctrlKey || e.metaKey; }
+
+    function initShortcuts() {
+      SHORTCUTS.forEach(([actionKey, keys]) => {
+        const row = document.createElement('tr');
+        const tdAction = document.createElement('td');
+        const tdKeys = document.createElement('td');
+        tdAction.textContent = tt(actionKey, actionKey);
+        tdKeys.textContent = keys;
+        row.appendChild(tdAction);
+        row.appendChild(tdKeys);
+        dom.shortcutsList.appendChild(row);
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'F1') {
+          e.preventDefault();
+          modals.openShortcuts();
+          return;
+        }
+
+        const tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') {
+          if (!e.target.closest('.monaco-editor')) return;
+        }
+
+        if (isMod(e) && e.key === 'Enter') {
+          e.preventDefault();
+          processSql('format');
+        } else if (isMod(e) && e.shiftKey && e.key.toLowerCase() === 'm') {
+          e.preventDefault();
+          processSql('minify');
+        } else if (isMod(e) && e.shiftKey && e.key.toLowerCase() === 'v') {
+          e.preventDefault();
+          validateOnly();
+        } else if (isMod(e) && e.shiftKey && e.key.toLowerCase() === 'c') {
+          e.preventDefault();
+          copyResult();
+        } else if (isMod(e) && e.key.toLowerCase() === 'l') {
+          e.preventDefault();
+          requestClear();
+        } else if (isMod(e) && e.key.toLowerCase() === 'o') {
+          e.preventDefault();
+          dom.fileInput.click();
+        } else if (isMod(e) && e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          fileOps.download(editorManager.getOutputValue());
+        } else if (e.key === 'Escape') {
+          modals.closeConfirm();
+          modals.closeShortcuts();
+          modals.closeSettings();
+        }
+      });
+    }
+
+    // ─── Settings bindings ───────────────────────────────────────
+    function initSettings() {
+      const bindings = [
+        ['setting-theme', 'theme', (v) => v],
+        ['setting-indent', 'indent', (v) => v],
+        ['setting-font-size', 'fontSize', (v) => Math.min(20, Math.max(12, Number(v)))],
+        ['setting-minimap', 'minimap', (v) => v],
+        ['setting-word-wrap', 'wordWrap', (v) => v],
+        ['setting-auto-format', 'autoFormat', (v) => v],
+        ['setting-keyword-case', 'keywordCase', (v) => v]
+      ];
+
+      bindings.forEach(([id, key, transform]) => {
+        const el = $(`#${id}`);
+        el.addEventListener('change', () => {
+          const val = el.type === 'checkbox' ? el.checked : transform(el.value);
+          settings[key] = val;
+          preferences.apply();
+          preferences.save();
+        });
+      });
+
+      $('#setting-dialect').addEventListener('change', (e) => {
+        applyDialect(e.target.value);
+      });
+
+      $('#toolbar-dialect').addEventListener('change', (e) => {
+        applyDialect(e.target.value);
+      });
+
+      $('#setting-auto-max').addEventListener('change', (e) => {
+        const kb = Math.min(4096, Math.max(64, Number(e.target.value)));
+        settings.autoFormatMaxBytes = kb * 1024;
+        e.target.value = kb;
+        preferences.save();
+      });
+    }
+
+    // ─── Event bindings ──────────────────────────────────────────
+    function initEvents() {
+      $('#btn-format').addEventListener('click', () => processSql('format'));
+      $('#btn-minify').addEventListener('click', () => processSql('minify'));
+      $('#btn-validate').addEventListener('click', validateOnly);
+      $('#btn-copy').addEventListener('click', copyResult);
+      $('#btn-uppercase').addEventListener('click', () => processSql('uppercase'));
+      $('#btn-strip-comments').addEventListener('click', () => processSql('stripComments'));
+      $('#btn-example').addEventListener('click', loadExample);
+      $('#btn-clear').addEventListener('click', requestClear);
+      $('#btn-clear-header').addEventListener('click', requestClear);
+
+      $('#btn-theme').addEventListener('click', () => {
+        settings.theme = settings.theme === 'dark' ? 'light' : 'dark';
+        preferences.apply();
+        preferences.save();
+      });
+
+      $('#btn-settings').addEventListener('click', () => modals.openSettings());
+      $('#settings-close').addEventListener('click', () => modals.closeSettings());
+
+      document.addEventListener('click', (e) => {
+        if (dom.settingsPanel.classList.contains('open') &&
+            !dom.settingsPanel.contains(e.target) &&
+            !$('#btn-settings').contains(e.target)) {
+          modals.closeSettings();
+        }
+      });
+
+      $('#btn-upload-header').addEventListener('click', () => dom.fileInput.click());
+      dom.fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) fileOps.loadFile(file);
+        e.target.value = '';
+      });
+
+      $('#btn-download-header').addEventListener('click', () => fileOps.download(editorManager.getOutputValue()));
+
+      $('#confirm-ok').addEventListener('click', doClear);
+      $('#confirm-cancel').addEventListener('click', () => modals.closeConfirm());
+      $('#confirm-close').addEventListener('click', () => modals.closeConfirm());
+      $('#shortcuts-close').addEventListener('click', () => modals.closeShortcuts());
+
+      dom.confirmModal.addEventListener('click', (e) => {
+        if (e.target === dom.confirmModal) modals.closeConfirm();
+      });
+      dom.shortcutsModal.addEventListener('click', (e) => {
+        if (e.target === dom.shortcutsModal) modals.closeShortcuts();
+      });
+
+      window.addEventListener('resize', () => editorManager.resize());
+    }
+
+    // ─── Monaco init ─────────────────────────────────────────────
+    function initMonaco() {
+      const monacoTimeout = setTimeout(() => {
+        dom.loadingOverlay.classList.add('hidden');
+        dom.monacoError.classList.add('visible');
+      }, 30000);
+
+      require.config({
+        paths: { vs: MONACO_VS }
+      });
+
+      require(['vs/editor/editor.main'], function () {
+        clearTimeout(monacoTimeout);
+        try {
+          settings = preferences.load();
+          settings.dialect = normalizeDialect(settings.dialect);
+          populateDialectSelects();
+          preferences.apply();
+
+          editorManager.init(
+            document.getElementById('monaco-input'),
+            document.getElementById('monaco-output')
+          );
+
+          dom.loadingOverlay.classList.add('hidden');
+          initResize();
+          initDragDrop();
+          initShortcuts();
+          initSettings();
+          initEvents();
+          statusBar.updateFromInput();
+        } catch (e) {
+          dom.loadingOverlay.classList.add('hidden');
+          dom.monacoError.classList.add('visible');
+          console.error('Monaco init error:', e);
+        }
+      }, function () {
+        clearTimeout(monacoTimeout);
+        dom.loadingOverlay.classList.add('hidden');
+        dom.monacoError.classList.add('visible');
+      });
+    }
+
+    function bootApp() {
+      if (location.protocol === 'file:') {
+        const backLink = document.querySelector('.header-back');
+        if (backLink) backLink.style.display = 'none';
+      }
+
+      if (typeof JulianoI18n !== 'undefined') {
+        JulianoI18n.init({
+          tool: 'sql_formatter',
+          langPath: '../assets/lang/',
+          langSwitcher: '.header-actions'
+        })
+          .then(() => initMonaco())
+          .catch((err) => {
+            console.error('i18n init failed:', err);
+            initMonaco();
+          });
+        return;
+      }
+
+      initMonaco();
+    }
+
+    const i18nScript = document.createElement('script');
+    i18nScript.src = new URL('../assets/js/i18n.js', window.location.href).href;
+    i18nScript.onload = bootApp;
+    i18nScript.onerror = bootApp;
+    document.head.appendChild(i18nScript);
+  })();
+  </script>
+</body>
+</html>
