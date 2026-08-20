@@ -1,2 +1,6 @@
 .cursor
 Spec SQL Formatter.md
+
+# Local SQL examples — never commit
+exemplo.sql
+exemplo_formatado.sql
