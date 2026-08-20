@@ -359,15 +359,6 @@
 
     .editor-container .monaco-editor { position: absolute !important; inset: 0; }
 
-    .monaco-editor .keyword-line-highlight {
-      background: rgba(0, 122, 204, 0.12);
-      box-shadow: inset 3px 0 0 var(--accent);
-    }
-
-    [data-theme="light"] .monaco-editor .keyword-line-highlight {
-      background: rgba(0, 120, 212, 0.1);
-    }
-
     .resize-handle {
       width: 5px;
       cursor: col-resize;
@@ -1009,17 +1000,6 @@
       MARKER_OWNER: 'sql-formatter',
       VALID_DIALECTS: ['sql', 'postgresql', 'mysql', 'mariadb', 'sqlite', 'transactsql', 'plsql', 'snowflake', 'bigquery', 'spark', 'trino', 'redshift'],
       VALID_KEYWORD_CASES: ['preserve', 'upper', 'lower'],
-      SQL_KEYWORDS: new Set([
-        'ADD', 'ALL', 'ALTER', 'AND', 'ANY', 'AS', 'ASC', 'BEGIN', 'BETWEEN', 'BREAK', 'BY',
-        'CASE', 'CHECK', 'CLOSE', 'COMMIT', 'CONSTRAINT', 'CONTINUE', 'CREATE', 'CROSS',
-        'CURSOR', 'DECLARE', 'DEFAULT', 'DELETE', 'DESC', 'DISTINCT', 'DROP', 'ELSE', 'END',
-        'EXEC', 'EXECUTE', 'EXISTS', 'FETCH', 'FOR', 'FOREIGN', 'FROM', 'FULL', 'FUNCTION',
-        'GOTO', 'GRANT', 'GROUP', 'HAVING', 'IF', 'IN', 'INDEX', 'INNER', 'INSERT', 'INTO',
-        'IS', 'JOIN', 'KEY', 'LEFT', 'LIKE', 'MERGE', 'NOT', 'NULL', 'ON', 'OPEN', 'OR',
-        'ORDER', 'OUTER', 'OVER', 'PROC', 'PROCEDURE', 'RETURN', 'RIGHT', 'ROLLBACK', 'SELECT',
-        'SET', 'TABLE', 'THEN', 'TOP', 'TRIGGER', 'TRUNCATE', 'UNION', 'UNIQUE', 'UPDATE',
-        'VALUES', 'VIEW', 'WHEN', 'WHERE', 'WHILE', 'WITH'
-      ]),
       DEFAULT_SETTINGS: {
         theme: 'dark',
         indent: '2',
@@ -1714,9 +1694,6 @@ END;`;
           readOnly: !settings.outputEditable
         });
 
-        editorManager.setupKeywordLineHighlight(inputEditor);
-        editorManager.setupKeywordLineHighlight(outputEditor);
-
         inputEditor.onDidChangeModelContent(() => {
           editorManager.clearMarkers();
           statusBar.updateFromInput();
@@ -1783,59 +1760,6 @@ END;`;
       resize() {
         if (inputEditor) inputEditor.layout();
         if (outputEditor) outputEditor.layout();
-      },
-
-      isSqlKeywordAtPosition(model, position) {
-        if (!model || !position) return false;
-        const lineContent = model.getLineContent(position.lineNumber);
-        const languageId = model.getLanguageId();
-        const columnIndex = position.column - 1;
-
-        try {
-          const tokenLines = monaco.editor.tokenize(lineContent, languageId);
-          const tokens = tokenLines[0] || [];
-          for (let i = 0; i < tokens.length; i++) {
-            const start = tokens[i].offset;
-            const end = i + 1 < tokens.length ? tokens[i + 1].offset : lineContent.length;
-            if (columnIndex >= start && columnIndex < end) {
-              const tokenType = String(tokens[i].type || tokens[i].scopes || '');
-              if (tokenType.includes('keyword') || tokenType.includes('operator')) return true;
-            }
-          }
-        } catch (_) {
-          /* fallback to word list */
-        }
-
-        const word = model.getWordAtPosition(position);
-        return Boolean(word && CONSTANTS.SQL_KEYWORDS.has(word.word.toUpperCase()));
-      },
-
-      setupKeywordLineHighlight(editor) {
-        let decorationCollection = null;
-
-        function clearHighlight() {
-          if (decorationCollection) {
-            decorationCollection.clear();
-            decorationCollection = null;
-          }
-        }
-
-        function updateHighlight() {
-          clearHighlight();
-          const position = editor.getPosition();
-          const model = editor.getModel();
-          if (!position || !model) return;
-          if (!editorManager.isSqlKeywordAtPosition(model, position)) return;
-
-          const line = position.lineNumber;
-          decorationCollection = editor.createDecorationsCollection([{
-            range: new monaco.Range(line, 1, line, model.getLineMaxColumn(line)),
-            options: { isWholeLine: true, className: 'keyword-line-highlight' }
-          }]);
-        }
-
-        editor.onDidChangeCursorPosition(updateHighlight);
-        editor.onDidChangeModelContent(updateHighlight);
       }
     };
 
